@@ -1,12 +1,15 @@
 package com.nikita_osia.spring_boot.kataspringboot.controller;
 
+import com.nikita_osia.spring_boot.kataspringboot.exeption.UserNotFoundException;
 import com.nikita_osia.spring_boot.kataspringboot.model.User;
 import com.nikita_osia.spring_boot.kataspringboot.service.UserService;
+import com.nikita_osia.spring_boot.kataspringboot.service.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -17,7 +20,7 @@ public class UserController {
     private UserService userService;
 
     @Autowired
-    public UserController(UserService userService) {
+    public UserController(UserServiceImpl userService) {
         this.userService = userService;
     }
 
@@ -39,32 +42,44 @@ public class UserController {
         return "redirect:/user";
     }
 
-    @GetMapping("/show")
-    public String showUserById(@RequestParam("id") int id, Model model) {
-        User user = userService.showUserById(id);
-        if (user == null) {
-            return "redirect:/user";
-        } else {
+    @GetMapping("/{id}")
+    public String showUserById(@PathVariable("id") int id, Model model) {
+        try {
+            User user = userService.showUserById(id);
             model.addAttribute("user", user);
             return "selected_user";
+        } catch (UserNotFoundException e) {
+            return "redirect:/error_page";
         }
     }
 
-    @GetMapping("/show/edit")
-    public String editUser(Model model, @RequestParam("id") int id) {
-        model.addAttribute("user", userService.showUserById(id));
-        return "edit_user";
+    @GetMapping("/{id}/edit")
+    public String editUser(Model model, @PathVariable("id") int id) {
+        try {
+            model.addAttribute("user", userService.showUserById(id));
+            return "edit_user";
+        } catch (UserNotFoundException e) {
+            return "redirect:/error_page";
+        }
     }
 
-    @PostMapping("/update")
-    public String updateUser(@ModelAttribute("user") User user, @RequestParam("id") int id) {
-        userService.updateUserById(id, user);
-        return "redirect:/user";
+    @PostMapping("/{id}/update")
+    public String updateUser(@ModelAttribute("user") User user, @PathVariable("id") int id) {
+        try {
+            userService.updateUserById(id, user);
+            return "redirect:/user";
+        } catch (UserNotFoundException e) {
+            return "redirect:/error_page";
+        }
     }
 
-    @PostMapping("/show/delete")
-    public String deleteUser(@ModelAttribute("user") User user, @RequestParam("id") int id) {
-        userService.removeUserById(id);
-        return "redirect:/user";
+    @PostMapping("/{id}/delete")
+    public String deleteUser(@PathVariable("id") int id) {
+        try {
+            userService.removeUserById(id);
+            return "redirect:/user";
+        } catch (UserNotFoundException e) {
+            return "redirect:/error_page";
+        }
     }
 }
